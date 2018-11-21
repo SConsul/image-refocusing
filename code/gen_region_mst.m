@@ -37,7 +37,7 @@ function [region_mst,region_disp,L,N] = gen_region_mst(img,disp)
         region_disp(labelVal,:) = sum(disp(redIdx+size(img,1)*size(img,2)*[0:size(disp,3)-1]))';
     end  
     figure;
-    imshow(modeImg);
+    imshow(modeImg/255.0);
     modeImg = double(modeImg);
 
 

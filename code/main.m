@@ -2,10 +2,10 @@ close all
 clear all
 clc
 %% Read image into the workspace.
-img0 = imread('../../middlebury_dataset/im0.png'); %left POV - shifted to right 
+img0 = double(imread('../../middlebury_dataset/im0.png')); %left POV - shifted to right 
 img0 = imresize(img0,1/12);
-
-img1 = imread('../../middlebury_dataset/im1.png'); %right POV - shifted to left
+%%
+img1 = double(imread('../../middlebury_dataset/im1.png')); %right POV - shifted to left
 img1 = imresize(img1,1/12);
 
 dX = fspecial('sobel')';
@@ -19,7 +19,7 @@ beta = 0.11;
 Ti = 8;
 Tg = 2;
 sigma = 0.1;
-
+threshold = 1.0;
 %% Disparity Calculation
 
 diff_I0 = zeros(size(img0,1),size(img0,2),dmax-dmin+1);
@@ -27,11 +27,11 @@ diff_dX0 = zeros(size(img0,1),size(img0,2),dmax-dmin+1);
 diff_I1 = zeros(size(img1,1),size(img1,2),dmax-dmin+1);
 diff_dX1 = zeros(size(img1,1),size(img1,2),dmax-dmin+1);
 for i=dmin:dmax
-    diff_I0(:,i+1:size(img0,2), i+1) = sum((img0(:,i+1:size(img1,2),:) - img1(:,1:(size(img1,2)-i),:)).^2,3);
-    diff_dX0(:,i+1:size(img0,2), i+1) = sum((dX_img0(:,i+1:size(img1,2),:) - dX_img1(:,1:size(img1,2)-i,:)).^2,3);
+    diff_I0(:,i+1:size(img0,2), i+1) = sum(abs(img0(:,i+1:size(img1,2),:) - img1(:,1:(size(img1,2)-i),:)),3);
+    diff_dX0(:,i+1:size(img0,2), i+1) = sum(abs(dX_img0(:,i+1:size(img1,2),:) - dX_img1(:,1:size(img1,2)-i,:)),3);
     
-    diff_I1(:,1:size(img1,2)-i, i+1) = sum((img0(:,i+1:size(img1,2),:) - img1(:,1:size(img1,2)-i,:)).^2,3);
-    diff_dX1(:,1:size(img1,2)-i, i+1) = sum((dX_img0(:,i+1:size(img1,2),:) - dX_img1(:,1:size(img1,2)-i,:)).^2,3);
+    diff_I1(:,1:size(img1,2)-i, i+1) = sum(abs(img0(:,i+1:size(img1,2),:) - img1(:,1:size(img1,2)-i,:)),3);
+    diff_dX1(:,1:size(img1,2)-i, i+1) = sum(abs(dX_img0(:,i+1:size(img1,2),:) - dX_img1(:,1:size(img1,2)-i,:)).^2,3);
 end
 
 pixel_disp0 = beta*min(diff_I0,Ti) + (1-beta)*min(diff_dX0,Tg);
@@ -80,4 +80,17 @@ end
 aggr_pixel_cost = graph_traversal2(pixel_mst0, reshape(cost_new,numRows*numCols,[]), sigma); 
 [~,disparity] = min(aggr_pixel_cost,[],2);
 disparity = reshape(disparity, numRows,numCols,[]);
+
 %% Cross-Based Local Multi-points Filtering (CLMF-0)
+disparity = CLMF_0(disparity, threshold);
+%% RESULT
+gt0 = parsePfm('../../middlebury_dataset/disp0.pfm');
+figure
+imshow(gt0/255.0)
+gt0 = imresize(gt0,1/12);
+figure
+imshow(gt0/255.0)
+
+%%
+figure
+imshow(disparity, [min(min(disparity)),max(max(disparity))])
