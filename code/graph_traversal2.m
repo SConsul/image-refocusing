@@ -1,4 +1,4 @@
-function cost_aggr = graph_traversal(mst,cost,img_size,sigma)
+function cost_aggr = graph_traversal2(mst,cost,img_size,sigma)
     %% obtain leaf nodes     
     deg = int8(degree(mst));
     leaf_nodes = find(deg==1)';
@@ -47,10 +47,10 @@ function cost_aggr = graph_traversal(mst,cost,img_size,sigma)
             q(start_q) = n;
        end
        
-       disp_n = img_size(1)*img_size(2)*(0:(img_size(3)-1)) + n;
-       disp_node = img_size(1)*img_size(2)*(0:(img_size(3)-1)) + node;
+%        disp_n = img_size(1)*img_size(2)*(0:(img_size(3)-1)) + n;
+%        disp_node = img_size(1)*img_size(2)*(0:(img_size(3)-1)) + node;
        
-       cost_aggr(disp_n) = cost_aggr(disp_n) + cost_aggr(disp_node).*exp(-mst.Edges.Weight(outedges(mst2,node))/sigma);
+       cost_aggr(n,:) = cost_aggr(n,:) + cost_aggr(node,:).*exp(-mst.Edges.Weight(outedges(mst2,node))/sigma);
        mst2 = rmedge(mst2,node,n);
 
     end
@@ -79,11 +79,11 @@ function cost_aggr = graph_traversal(mst,cost,img_size,sigma)
        parent_node = traversal(end_t-1);
        node = traversal(end_t);
        
-       disp_parent = img_size(1)*img_size(2)*(0:(img_size(3)-1)) + parent_node;
-       disp_node = img_size(1)*img_size(2)*(0:(img_size(3)-1)) + node;
+%        disp_parent = img_size(1)*img_size(2)*(0:(img_size(3)-1)) + parent_node;
+%        disp_node = img_size(1)*img_size(2)*(0:(img_size(3)-1)) + node;
        
        S = exp(-mst.Edges.Weight(findedge(mst2,parent_node,node))/sigma);
-       cost_aggr(disp_parent) = S*cost_aggr(disp_parent) + (1-S^2)*cost_aggr(disp_node);
+       cost_aggr(parent_node,:) = S*cost_aggr(parent_node,:) + (1-S^2)*cost_aggr(node,:);
 
        if degree(mst,node) == 1
            while(1)
