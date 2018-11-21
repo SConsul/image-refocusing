@@ -1,17 +1,17 @@
 clear;
-img = magic(20);
+img = magic(5);
 [mst,g] = gen_pixel_mst(img);
 % p = plot(mst,'EdgeLabel',mst.Edges.Weight);
 % highlight(p,mst,'EdgeColor','r','LineWidth',2);
 rng(42);
 cost_aggr = floor(rand(size(img))*10);
-% cost = cost_aggr;
+
 deg = int8(degree(mst));
 Q = find(deg==1)';
 deg = [];
-aggregated_cost = 0;
+% aggregated_cost = 0;
 mst2 = mst;
-% i = 1;
+
 central_node = 0;
 q = zeros(1,2*size(Q,2));
 start_q = size(q,2)-size(Q,2)+1;
@@ -21,8 +21,8 @@ Q=[];
 tic;
 % forward pass
 while(1)
-%    p = plot(g,'EdgeLabel',g.Edges.Weight,'NodeLabel',cost_aggr(:));
-%    highlight(p,mst2,'EdgeColor','r','LineWidth',5);
+   p = plot(g,'EdgeLabel',g.Edges.Weight,'NodeLabel',cost_aggr(:));
+   highlight(p,mst2,'EdgeColor','r','LineWidth',5);
 
    if start_q == end_q
        central_node = q(start_q);
@@ -67,8 +67,8 @@ size_t = size(traversal,2);
 tic;
 while(1)
 %     traversal
-%     p = plot(g,'EdgeLabel',g.Edges.Weight,'NodeLabel',cost_aggr(:));
-%    highlight(p,mst2,'EdgeColor','r','LineWidth',5);
+    p = plot(g,'EdgeLabel',g.Edges.Weight,'NodeLabel',cost_aggr(:));
+   highlight(p,mst2,'EdgeColor','r','LineWidth',5);
    if degree(mst2,central_node) ==0
        break;
    end
