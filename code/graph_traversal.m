@@ -1,4 +1,4 @@
-function cost_aggr = graph_traversal(mst,cost,img_size)
+function cost_aggr = graph_traversal(mst,cost,img_size,sigma)
     deg = int8(degree(mst));
     Q = find(deg==1)';
     deg = [];
@@ -14,7 +14,9 @@ function cost_aggr = graph_traversal(mst,cost,img_size)
     cost_aggr = cost;
     % forward pass
     while(1)
-        
+%         p = plot(mst,'EdgeLabel',mst.Edges.Weight);
+%     highlight(p,mst2,'EdgeColor','r','LineWidth',2);
+
        if start_q == end_q
 %          only 1 node left in the tree
            central_node = q(start_q);
@@ -39,8 +41,9 @@ function cost_aggr = graph_traversal(mst,cost,img_size)
             start_q = start_q - 1;
             q(start_q) = n;
        end
-       
-       cost_aggr(n) = cost_aggr(n) + cost_aggr(node)*exp(-mst.Edges.Weight(outedges(mst2,node)));
+       [x_n,y_n,~] = ind2sub(img_size,n);
+       [x_node,y_node,~] = ind2sub(img_size,node);
+       cost_aggr(x_n,y_n,:) = cost_aggr(x_n,y_n,:) + cost_aggr(x_node,y_node,:).*exp(-mst.Edges.Weight(outedges(mst2,node))/sigma);
        mst2 = rmedge(mst2,node,n);
 
     end
@@ -48,7 +51,7 @@ function cost_aggr = graph_traversal(mst,cost,img_size)
     %% backward pass
     mst2 = mst;
     n = neighbors(mst2,central_node);
-    traversal = zeros(1,sum(img_size(:)));
+    traversal = zeros(1,sum(img_size(1:2)));
     traversal(1) = central_node;
     traversal(2) = n(1);
     end_t = 2;
@@ -56,19 +59,24 @@ function cost_aggr = graph_traversal(mst,cost,img_size)
     tic;
     while(1)
     %     traversal
- 
+%     p = plot(mst,'EdgeLabel',mst.Edges.Weight);
+%     highlight(p,mst2,'EdgeColor','r','LineWidth',2);
        if degree(mst2,central_node) ==0
            break;
        end
        if end_t == size_t
-           traversal = [traversal zeros(1,max(img_size(:)))];
+           traversal = [traversal zeros(1,max(img_size(1:2)))];
            size_t = size(traversal,2);
        end
 
        parent_node = traversal(end_t-1);
        node = traversal(end_t);
-       S = exp(-mst.Edges.Weight(findedge(mst2,parent_node,node)));
-       cost_aggr(node) = S*cost_aggr(parent_node) + (1-S^2)*cost_aggr(node);
+       
+       [x_parent,y_parent,~] = ind2sub(img_size,parent_node);
+       [x_node,y_node,~] = ind2sub(img_size,node);
+       
+       S = exp(-mst.Edges.Weight(findedge(mst2,parent_node,node))/sigma);
+       cost_aggr(x_node,y_node,:) = S*cost_aggr(x_parent,y_parent,:) + (1-S^2)*cost_aggr(x_node,y_node,:);
 
        if degree(mst,node) == 1
            while(1)

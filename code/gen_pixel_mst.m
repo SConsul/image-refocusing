@@ -16,7 +16,7 @@ function [pixel_mst,pixel_graph] = gen_pixel_mst(img)
         pixel_graph = addedge(pixel_graph,a,b,weights);
     end
     
-%     p = plot(pixel_graph,'EdgeLabel',pixel_graph.Edges.Weight);
+    p = plot(pixel_graph,'EdgeLabel',pixel_graph.Edges.Weight);
     [pixel_mst,~] = minspantree(pixel_graph);
-%     highlight(p,T);
+    highlight(p,pixel_mst);
 end
