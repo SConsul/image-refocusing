@@ -27,7 +27,7 @@ diff_dX0 = zeros(size(img0,1),size(img0,2),dmax-dmin+1);
 diff_I1 = zeros(size(img1,1),size(img1,2),dmax-dmin+1);
 diff_dX1 = zeros(size(img1,1),size(img1,2),dmax-dmin+1);
 for i=dmin:dmax
-    diff_I0(:,i+1:size(img0,2), i+1) = sum((img0(:,i+1:size(img1,2),:) - img1(:,1:size(img1,2)-i,:)).^2,3);
+    diff_I0(:,i+1:size(img0,2), i+1) = sum((img0(:,i+1:size(img1,2),:) - img1(:,1:(size(img1,2)-i),:)).^2,3);
     diff_dX0(:,i+1:size(img0,2), i+1) = sum((dX_img0(:,i+1:size(img1,2),:) - dX_img1(:,1:size(img1,2)-i,:)).^2,3);
     
     diff_I1(:,1:size(img1,2)-i, i+1) = sum((img0(:,i+1:size(img1,2),:) - img1(:,1:size(img1,2)-i,:)).^2,3);
@@ -42,58 +42,42 @@ numCols = size(img1,2);
 
 %% Pixel Level MST
 pixel_mst0 = gen_pixel_mst(img0);
-aggr_pixel_cost0 = graph_traversal(pixel_mst0, pixel_disp0, [numRows, numCols], sigma); 
-
 pixel_mst1 = gen_pixel_mst(img1);
-aggr_pixel_cost1 = graph_traversal(pixel_mst1, pixel_disp1, [numRows, numCols], sigma); 
+%%
+aggr_pixel_cost0 = graph_traversal2(pixel_mst0, reshape(pixel_disp0,numRows*numCols,[]), sigma); 
+aggr_pixel_cost1 = graph_traversal2(pixel_mst1, reshape(pixel_disp1,numRows*numCols,[]), sigma); 
 
 %% Region Level MST
-[region_mst1,region_disp1,L1,N1] = gen_region_mst(img1);
-aggr_region_cost1 = graph_traversal(region_mst1, region_disp1, N1, sigma);
+[region_mst1,region_disp1,L1,N1] = gen_region_mst(img1, pixel_disp1);
+aggr_region_cost1 = graph_traversal2(region_mst1, region_disp1, sigma);
 
-[region_mst0,region_disp0,L0,N0] = gen_region_mst(img0);
-aggr_region_cost0 = graph_traversal(region_mst0, region_disp0, N0, sigma);
+[region_mst0,region_disp0,L0,N0] = gen_region_mst(img0, pixel_disp0);
+aggr_region_cost0 = graph_traversal2(region_mst0, region_disp0, sigma);
 
 %% Combined Pixel Costs
-idx0 = label2idx(L0);
-idx1 = label2idx(L1);
-edges0 = edge(img0(:,:,1), 'Canny');
-edges1 = edge(img1(:,:,1), 'Canny');
-% edge_pixels1 = edges1(edges1==1);
-imshow(edges1);
-e0 = label2idx(int8(edges0)+1);
-e1 = label2idx(int8(edges1)+1);
-alpha0 = zeros(1,N0);
-alpha1 = zeros(1,N1);
-combined_cost0 = zeros(numRows, numCols);
-combined_cost1 = zeros(numRows, numCols);
 
-for labelVal1 = 1:N1
-    alpha1(1,labelVal1) = length(intersect(idx1{labelVal1},e1{2}))/length(idx1{labelVal1});
-    combined_cost1(idx1{labelVal1}) = (1-alpha1(1,labelVal1))*aggr_region_cost1(labelVal1) + alpha1(1,labelVal1)*aggr_pixel_cost1(idx1{labelVal1}); 
-end
-
-for labelVal0 = 1:N0
-    alpha0(1,labelVal0) = length(intersect(idx0{labelVal0},e0{2}))/length(idx0{labelVal0});
-    combined_cost0(idx0{labelVal0}) = (1-alpha0(1,labelVal0))*aggr_region_cost0(labelVal0) + alpha0(1,labelVal0)*aggr_pixel_cost0(idx0{labelVal0}); 
-end
+combined_cost0 = combined_pixel_cost(img0,L0,N0,aggr_region_cost0,reshape(aggr_pixel_cost0,numRows,numCols,[]));
+combined_cost1 = combined_pixel_cost(img1,L1,N1,aggr_region_cost1,reshape(aggr_pixel_cost1,numRows,numCols,[]));
 
 %% WTA: Winner Take All
-disparity0 = min(combined_cost0,[],3);
-disparity1 = min(combined_cost1,[],3);
-
+[~, disparity0] = min(combined_cost0,[],3);
+[~, disparity1] = min(combined_cost1,[],3);
+disparity0 = uint8(disparity0);
+disparity1 = uint8(disparity1);
 %% Non Local Refinement
 % Check for Stable points
 cost_new = zeros(numRows,numCols, dmax-dmin+1);
-for y=1:numRows
-    for x=1:numCols
-        if disparity0(x,y) == disparity1(x-disparity0(x,y),y) 
-            cost_new(x,y,:) = [dmin:dmax]' - disparity0(x,y);
+for x=1:numRows
+    for y=1:numCols
+        if y > disparity0(x,y)
+            if disparity0(x,y) == disparity1(x,y-disparity0(x,y)) 
+                cost_new(x,y,:) = abs([dmin:dmax]' - double(disparity0(x,y)));
+            end
         end
     end
 end
 
-aggr_pixel_cost = graph_traversal(pixel_mst0, cost_new, [numRows, numCols], sigma); 
-
-disparity = min(aggr_pixel_cost,[],3);
-
+aggr_pixel_cost = graph_traversal2(pixel_mst0, reshape(cost_new,numRows*numCols,[]), sigma); 
+[~,disparity] = min(aggr_pixel_cost,[],2);
+disparity = reshape(disparity, numRows,numCols,[]);
+%% Cross-Based Local Multi-points Filtering (CLMF-0)

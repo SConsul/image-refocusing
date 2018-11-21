@@ -1,4 +1,4 @@
-function cost_aggr = graph_traversal2(mst,cost,img_size,sigma)
+function cost_aggr = graph_traversal2(mst,cost,sigma)
     %% obtain leaf nodes     
     deg = int8(degree(mst));
     leaf_nodes = find(deg==1)';
@@ -58,7 +58,7 @@ function cost_aggr = graph_traversal2(mst,cost,img_size,sigma)
     %% backward pass
     mst2 = mst;
     n = neighbors(mst2,central_node);
-    traversal = zeros(1,sum(img_size(1:2)));
+    traversal = zeros(1,size(n,1));
     traversal(1) = central_node;
     traversal(2) = n(1);
     end_t = 2;
@@ -72,7 +72,7 @@ function cost_aggr = graph_traversal2(mst,cost,img_size,sigma)
            break;
        end
        if end_t == size_t
-           traversal = [traversal zeros(1,max(img_size(1:2)))];
+           traversal = [traversal zeros(1,size(traversal,2))];
            size_t = size(traversal,2);
        end
 
