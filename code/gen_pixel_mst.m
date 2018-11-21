@@ -1,5 +1,6 @@
 function [pixel_mst,pixel_graph] = gen_pixel_mst(img)
     pixel_graph = graph();
+    img = double(img);
     [m,n,~] = size(img);
     pixel_graph = addnode(pixel_graph, m*n);
     node2nums = reshape(1:m*n,[m,n]);
@@ -16,7 +17,7 @@ function [pixel_mst,pixel_graph] = gen_pixel_mst(img)
         pixel_graph = addedge(pixel_graph,a,b,weights);
     end
     
-    p = plot(pixel_graph,'EdgeLabel',pixel_graph.Edges.Weight);
+%     p = plot(pixel_graph,'EdgeLabel',pixel_graph.Edges.Weight);
     [pixel_mst,~] = minspantree(pixel_graph);
-    highlight(p,pixel_mst);
+%     highlight(p,pixel_mst);
 end
