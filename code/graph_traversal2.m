@@ -83,7 +83,7 @@ function cost_aggr = graph_traversal2(mst,cost,sigma)
 %        disp_node = img_size(1)*img_size(2)*(0:(img_size(3)-1)) + node;
        
        S = exp(-mst.Edges.Weight(findedge(mst2,parent_node,node))/sigma);
-       cost_aggr(parent_node,:) = S*cost_aggr(parent_node,:) + (1-S^2)*cost_aggr(node,:);
+       cost_aggr(node,:) = S*cost_aggr(parent_node,:) + (1-S^2)*cost_aggr(node,:);
 
        if degree(mst,node) == 1
            while(1)

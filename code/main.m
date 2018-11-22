@@ -3,31 +3,21 @@
 clc
 tic;
 %% Read image into the workspace.
-img0 = double(imread('../../middlebury_dataset/im0.png')); %left POV - shifted to right 
+img0 = double(imread('../../middlebury_dataset/Motorcycle/im0.png')); %left POV - shifted to right 
 img0 = imresize(img0,1/12);
 %%
-img1 = double(imread('../../middlebury_dataset/im1.png')); %right POV - shifted to left
+img1 = double(imread('../../middlebury_dataset/Motorcycle/im1.png')); %right POV - shifted to left
 img1 = imresize(img1,1/12);
 
-temp = img1;
-img1 = img0;
-img0 = temp;
-
-% img0 = zeros(size(img1));
-% img0(:,10:size(img0,2),:) = img1(:,1:size(img1,2)-9,:);
-% img1 = img1(:,10:size(img1,2),:);
-% img0 = img0(:,10:size(img0,2),:);
-% figure;
-% imshow(img0/255.0)
-% title('img0')
-% figure;
-% imshow(img1/255.0);
-% title('img1')
-
+img0 = imgaussfilt(img0,.2);
+img1 = imgaussfilt(img1,.2);
 dX = fspecial('sobel')';
 dX_img0 = imfilter(img0,dX,'replicate');
 dX_img1 = imfilter(img1,dX,'replicate');
-
+% [Lnew,~] = superpixels(img0,350);
+% figure;
+% imshow(imoverlay(img0/255.0,boundarymask(Lnew),'cyan'));
+% title('superpixel')
 %% Parameters
 dmin=0;
 dmax=15;
@@ -35,7 +25,7 @@ beta = 0.11;
 Ti = 8;
 Tg = 2;
 sigma = 2;
-slic_seed = 100;
+slic_seed = 350;
 threshold = 1.0;
 %% Disparity Calculation
 
@@ -101,7 +91,7 @@ disparity = reshape(disparity, numRows,numCols,[]);
 %% Cross-Based Local Multi-points Filtering (CLMF-0)
 disparity = CLMF_0(disparity, threshold);
 %% RESULT
-gt0 = parsePfm('../../middlebury_dataset/disp0.pfm');
+gt0 = parsePfm('../../middlebury_dataset/Motorcycle/disp0.pfm');
 figure
 imshow(gt0/255.0)
 gt_shrunk0 = imresize(gt0,1/12,'Antialiasing',false);
@@ -112,3 +102,37 @@ imshow(gt_shrunk0/255.0)
 figure
 imshow(disparity, [min(min(disparity)),max(max(disparity))]); colorbar; colormap(jet)
 toc;
+%%
+BW0 = boundarymask(L0);
+figure;
+imshow(imoverlay((disparity/14), BW0, 'cyan'))
+title('combined disp')
+%%
+[~, d0] = min(reshape(aggr_pixel_cost0,numRows,numCols,[]),[],3);
+[~, d1] = min(reshape(aggr_pixel_cost1,numRows,numCols,[]),[],3);
+d0 = uint8(d0);
+d1 = uint8(d1);
+cost_p_new = zeros(numRows,numCols, dmax-dmin+1);
+for x=1:numRows
+    for y=1:numCols
+        if y > d0(x,y)
+            if d0(x,y) == d1(x,y-d0(x,y)) 
+                cost_p_new(x,y,:) = abs([dmin:dmax]' - double(d0(x,y)));
+            end
+        end
+    end
+end
+
+aggr_p_cost = graph_traversal2(pixel_mst0, reshape(cost_p_new,numRows*numCols,[]), sigma); 
+[~,d] = min(aggr_p_cost,[],2);
+d = reshape(d, numRows,numCols,[]);
+%%
+figure;
+d = uint8(d);
+% imshow(imoverlay(d, BW0, 'cyan'))
+imshow(d,[min(min(d)),max(max(d))]);
+title('pixel disp')
+%%
+figure;
+imshow(d/max(max(d)));
+title('pixel disp')
