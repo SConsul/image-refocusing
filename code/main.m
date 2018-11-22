@@ -1,12 +1,28 @@
-close all
-clear all
+% close all
+% clear all
 clc
+tic;
 %% Read image into the workspace.
 img0 = double(imread('../../middlebury_dataset/im0.png')); %left POV - shifted to right 
 img0 = imresize(img0,1/12);
 %%
 img1 = double(imread('../../middlebury_dataset/im1.png')); %right POV - shifted to left
 img1 = imresize(img1,1/12);
+
+temp = img1;
+img1 = img0;
+img0 = temp;
+
+% img0 = zeros(size(img1));
+% img0(:,10:size(img0,2),:) = img1(:,1:size(img1,2)-9,:);
+% img1 = img1(:,10:size(img1,2),:);
+% img0 = img0(:,10:size(img0,2),:);
+% figure;
+% imshow(img0/255.0)
+% title('img0')
+% figure;
+% imshow(img1/255.0);
+% title('img1')
 
 dX = fspecial('sobel')';
 dX_img0 = imfilter(img0,dX,'replicate');
@@ -18,7 +34,8 @@ dmax=15;
 beta = 0.11;
 Ti = 8;
 Tg = 2;
-sigma = 0.1;
+sigma = 2;
+slic_seed = 100;
 threshold = 1.0;
 %% Disparity Calculation
 
@@ -48,10 +65,10 @@ aggr_pixel_cost0 = graph_traversal2(pixel_mst0, reshape(pixel_disp0,numRows*numC
 aggr_pixel_cost1 = graph_traversal2(pixel_mst1, reshape(pixel_disp1,numRows*numCols,[]), sigma); 
 
 %% Region Level MST
-[region_mst1,region_disp1,L1,N1] = gen_region_mst(img1, pixel_disp1);
+[region_mst1,region_disp1,L1,N1] = gen_region_mst(img1, pixel_disp1, slic_seed);
 aggr_region_cost1 = graph_traversal2(region_mst1, region_disp1, sigma);
 
-[region_mst0,region_disp0,L0,N0] = gen_region_mst(img0, pixel_disp0);
+[region_mst0,region_disp0,L0,N0] = gen_region_mst(img0, pixel_disp0, slic_seed);
 aggr_region_cost0 = graph_traversal2(region_mst0, region_disp0, sigma);
 
 %% Combined Pixel Costs
@@ -87,10 +104,11 @@ disparity = CLMF_0(disparity, threshold);
 gt0 = parsePfm('../../middlebury_dataset/disp0.pfm');
 figure
 imshow(gt0/255.0)
-gt0 = imresize(gt0,1/12);
+gt_shrunk0 = imresize(gt0,1/12,'Antialiasing',false);
 figure
-imshow(gt0/255.0)
+imshow(gt_shrunk0/255.0)
 
 %%
 figure
-imshow(disparity, [min(min(disparity)),max(max(disparity))])
+imshow(disparity, [min(min(disparity)),max(max(disparity))]); colorbar; colormap(jet)
+toc;

@@ -1,14 +1,14 @@
-function [region_mst,region_disp,L,N] = gen_region_mst(img,disp)
+function [region_mst,region_disp,L,N] = gen_region_mst(img,disp,slic_seed)
     %% Compute Superpixels of Input RGB Image
-    [L,N] = superpixels(img,1000);
+    [L,N] = superpixels(img,slic_seed);
     % [L1,N1] = superpixels(img1,1000);
 
     % Display the superpixel boundaries overlaid on the original image.
     figure;
     BW = boundarymask(L);
-    imshow(imoverlay(img,BW,'cyan'))
+    imshow(imoverlay(img/255.0,BW,'cyan'))
     % img0 = imgaussfilt(img0,1);
-    % figure;
+%     figure;
     % imshow(imoverlay(img0,BW0,'cyan'))
 
     % % Set the color of each pixel in the output image to the mode RGB color of the superpixel region.
@@ -36,8 +36,8 @@ function [region_mst,region_disp,L,N] = gen_region_mst(img,disp)
         modeImg(blueIdx) = b;
         region_disp(labelVal,:) = sum(disp(redIdx+size(img,1)*size(img,2)*[0:size(disp,3)-1]))';
     end  
-    figure;
-    imshow(modeImg/255.0);
+%     figure;
+%     imshow(modeImg/255.0);
     modeImg = double(modeImg);
 
 
