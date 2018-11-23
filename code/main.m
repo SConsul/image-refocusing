@@ -1,13 +1,13 @@
-% close all
-% clear all
+close all
+clear all
 clc
 tic;
 %% Read image into the workspace.
 img0 = double(imread('../../middlebury_dataset/Motorcycle/im0.png')); %left POV - shifted to right 
-img0 = imresize(img0,1/12);
+img0 = imresize(img0,1/4);
 %%
 img1 = double(imread('../../middlebury_dataset/Motorcycle/im1.png')); %right POV - shifted to left
-img1 = imresize(img1,1/12);
+img1 = imresize(img1,1/4);
 
 img0 = imgaussfilt(img0,.2);
 img1 = imgaussfilt(img1,.2);
@@ -25,7 +25,7 @@ beta = 0.11;
 Ti = 8;
 Tg = 2;
 sigma = 2;
-slic_seed = 350;
+slic_seed = 1000;
 threshold = 1.0;
 %% Disparity Calculation
 
@@ -50,16 +50,19 @@ numCols = size(img1,2);
 %% Pixel Level MST
 pixel_mst0 = gen_pixel_mst(img0);
 pixel_mst1 = gen_pixel_mst(img1);
-%%
-aggr_pixel_cost0 = graph_traversal2(pixel_mst0, reshape(pixel_disp0,numRows*numCols,[]), sigma); 
-aggr_pixel_cost1 = graph_traversal2(pixel_mst1, reshape(pixel_disp1,numRows*numCols,[]), sigma); 
+aggr_pixel_cost0 = graph_traversal_latest(pixel_mst0, reshape(pixel_disp0,numRows*numCols,[]), sigma); 
+aggr_pixel_cost1 = graph_traversal_latest(pixel_mst1, reshape(pixel_disp1,numRows*numCols,[]), sigma); 
+    
+
+% aggr_pixel_cost0 = graph_traversal_latest(pixel_mst0, reshape(pixel_disp0,numRows*numCols,[]), sigma); 
+% aggr_pixel_cost1 = graph_traversal_latest(pixel_mst1, reshape(pixel_disp1,numRows*numCols,[]), sigma); 
 
 %% Region Level MST
 [region_mst1,region_disp1,L1,N1] = gen_region_mst(img1, pixel_disp1, slic_seed);
-aggr_region_cost1 = graph_traversal2(region_mst1, region_disp1, sigma);
+aggr_region_cost1 = graph_traversal_latest(region_mst1, region_disp1, sigma);
 
 [region_mst0,region_disp0,L0,N0] = gen_region_mst(img0, pixel_disp0, slic_seed);
-aggr_region_cost0 = graph_traversal2(region_mst0, region_disp0, sigma);
+aggr_region_cost0 = graph_traversal_latest(region_mst0, region_disp0, sigma);
 
 %% Combined Pixel Costs
 
@@ -84,7 +87,7 @@ for x=1:numRows
     end
 end
 
-aggr_pixel_cost = graph_traversal2(pixel_mst0, reshape(cost_new,numRows*numCols,[]), sigma); 
+aggr_pixel_cost = graph_traversal_latest(pixel_mst0, reshape(cost_new,numRows*numCols,[]), sigma); 
 [~,disparity] = min(aggr_pixel_cost,[],2);
 disparity = reshape(disparity, numRows,numCols,[]);
 
@@ -94,7 +97,7 @@ disparity = CLMF_0(disparity, threshold);
 gt0 = parsePfm('../../middlebury_dataset/Motorcycle/disp0.pfm');
 figure
 imshow(gt0/255.0)
-gt_shrunk0 = imresize(gt0,1/12,'Antialiasing',false);
+gt_shrunk0 = imresize(gt0,1/4,'Antialiasing',false);
 figure
 imshow(gt_shrunk0/255.0)
 
@@ -123,7 +126,7 @@ for x=1:numRows
     end
 end
 
-aggr_p_cost = graph_traversal2(pixel_mst0, reshape(cost_p_new,numRows*numCols,[]), sigma); 
+aggr_p_cost = graph_traversal_latest(pixel_mst0, reshape(cost_p_new,numRows*numCols,[]), sigma); 
 [~,d] = min(aggr_p_cost,[],2);
 d = reshape(d, numRows,numCols,[]);
 %%
