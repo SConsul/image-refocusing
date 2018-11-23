@@ -34,8 +34,8 @@ function [region_mst,region_disp,L,N] = gen_region_mst(img,disp,slic_seed)
         modeImg(redIdx) = r;
         modeImg(greenIdx) = g;
         modeImg(blueIdx) = b;
-%         region_disp(labelVal,:) = sum(disp(redIdx+size(img,1)*size(img,2)*[0:size(disp,3)-1]))';
-        region_disp(labelVal,:) = mean(disp(redIdx+size(img,1)*size(img,2)*[0:size(disp,3)-1]))';
+        region_disp(labelVal,:) = sum(disp(redIdx+size(img,1)*size(img,2)*[0:size(disp,3)-1]))';
+%         region_disp(labelVal,:) = mean(disp(redIdx+size(img,1)*size(img,2)*[0:size(disp,3)-1]))';
     end  
 %     figure;
 %     imshow(modeImg/255.0);

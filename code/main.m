@@ -3,10 +3,10 @@ close all
 clc
 tic;
 %% Read image into the workspace.
-img0 = double(imread('../../middlebury_dataset/Classroom/im0.png')); %left POV - shifted to right 
+img0 = double(imread('../../middlebury_dataset/Motorcycle/im0.png')); %left POV - shifted to right 
 img0 = imresize(img0,1/5);
 %%
-img1 = double(imread('../../middlebury_dataset/Classroom/im1.png')); %right POV - shifted to left
+img1 = double(imread('../../middlebury_dataset/Motorcycle/im1.png')); %right POV - shifted to left
 img1 = imresize(img1,1/5);
 
 img0 = imgaussfilt(img0,0.2);
@@ -22,12 +22,12 @@ dX_img1 = imfilter(img1,dX,'replicate');
 % title('superpixel')
 %% Parameters
 dmin=0;
-dmax=50;
+dmax=60;
 beta = 0.11;
 Ti = 8;
 Tg = 2;
-sigma = 1;
-slic_seed = 750;
+sigma = 0.5;
+slic_seed = floor(size(img0,1)*size(img0,1)/150);
 threshold = 1;
 %% Disparity Calculation
 
@@ -53,7 +53,9 @@ numCols = size(img1,2);
 %% Pixel Level MST
 pixel_mst0 = gen_pixel_mst(img0);
 pixel_mst1 = gen_pixel_mst(img1);
+tic;
 aggr_pixel_cost0 = graph_traversal_latest(pixel_mst0, reshape(pixel_disp0,numRows*numCols,[]), sigma); 
+toc;
 aggr_pixel_cost1 = graph_traversal_latest(pixel_mst1, reshape(pixel_disp1,numRows*numCols,[]), sigma); 
     
 
@@ -75,22 +77,25 @@ combined_cost1 = combined_pixel_cost(img1,L1,N1,aggr_region_cost1,reshape(aggr_p
 %% WTA: Winner Take All
 [~, disparity0] = min(combined_cost0,[],3);
 [~, disparity1] = min(combined_cost1,[],3);
-disparity0 = uint8(disparity0);
-disparity1 = uint8(disparity1);
+disparity0 = int16(disparity0);
+disparity1 = int16(disparity1);
 %% Non Local Refinement
 % Check for Stable points
 cost_new = zeros(numRows,numCols, dmax-dmin+1);
-slack=1;
+unstable_mask = ones(numRows,numCols);
+slack=5;
 for x=1:numRows
     for y=1:numCols
         if y > disparity0(x,y)
             if abs(disparity0(x,y) - disparity1(x,y-disparity0(x,y)))<=slack  
                 cost_new(x,y,:) = abs((dmin:dmax)' - double(disparity0(x,y)));
+                unstable_mask(x,y) = 0;
             end
         end
     end
 end
-
+%%
+% aggr_pixel_cost = graph_traversal_latest(pixel_mst0, reshape(cost_new,numRows*numCols,[]), sigma); 
 aggr_pixel_cost = graph_traversal_latest(pixel_mst0, reshape(cost_new,numRows*numCols,[]), sigma); 
 [~,disparity] = min(aggr_pixel_cost,[],2);
 disparity = reshape(disparity, numRows,numCols,[]);

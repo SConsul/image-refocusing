@@ -7,11 +7,11 @@
 #include <math.h>
 
 struct Node{
-  long n;
+  unsigned long n;
   double w;
 };
 
-void disp_adjList(std::map<long,std::vector<Node>>& n)
+void disp_adjList(std::map<unsigned long,std::vector<Node>>& n)
 {
   for (auto itr = n.begin(); itr != n.end(); ++itr)
   {
@@ -25,7 +25,7 @@ void disp_adjList(std::map<long,std::vector<Node>>& n)
 void getAdjacencyList(matlab::data::TypedArray<double>& edge_nodes,
   matlab::data::TypedArray<double>& edge_weights,
   long len,
-  std::map<long,std::vector<Node>>& adj_list)
+  std::map<unsigned long,std::vector<Node>>& adj_list)
 
    {
     for(long i=0;i<len;i++)
@@ -40,13 +40,13 @@ void getAdjacencyList(matlab::data::TypedArray<double>& edge_nodes,
 }
 
 
-matlab::data::TypedArray<double> graph_traversal(std::map<long,std::vector<Node>> graph, std::queue<long>& q,matlab::data::TypedArray<double> cost_aggr,int dmax,double sigma)
+matlab::data::TypedArray<double> graph_traversal(std::map<unsigned long,std::vector<Node>> graph, std::queue<unsigned long>& q,matlab::data::TypedArray<double> cost_aggr,int dmax,double sigma)
 {
-    std::map<long,std::vector<Node>> graph2 = graph;
+    std::map<unsigned long,std::vector<Node>> graph2 = graph;
     unsigned long central_node=0,node,n;
     int i = 0,node_idx,parent_idx;
     double sim;
-    int temp;
+    // int temp;
     while(!q.empty())
     {
       if(q.size() == 1)
@@ -84,7 +84,7 @@ matlab::data::TypedArray<double> graph_traversal(std::map<long,std::vector<Node>
 
     graph = graph2;
     // disp_adjList(graph);
-    std::vector<long> stack;
+    std::vector<unsigned long> stack;
     stack.push_back(central_node);
     stack.push_back(graph[central_node][0].n);
     unsigned long parent_node;
@@ -179,10 +179,10 @@ public:
 
         double dmax = cost_aggr.getDimensions()[1];
         dmax = (int)dmax;
-        std::map<long,std::vector<Node>> graph;
+        std::map<unsigned long,std::vector<Node>> graph;
         getAdjacencyList(edge_nodes,edge_weights,len,graph);
         // disp_adjList(graph);
-        std::queue<long> q;
+        std::queue<unsigned long> q;
         for(long i=leaf_nodes.getDimensions()[1]-1;i>=0;i--){
             q.push(leaf_nodes[i]);
         }

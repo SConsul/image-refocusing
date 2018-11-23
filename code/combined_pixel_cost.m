@@ -1,6 +1,10 @@
 function combined_cost = combined_pixel_cost(img,L,N,region_cost,pixel_cost)
 
-    edges = edge(img(:,:,1), 'Canny');
+    edge_r = edge(img(:,:,1), 'Canny',0.2,1);
+    edge_g = edge(img(:,:,2), 'Canny',0.2,1);
+    edge_b = edge(img(:,:,3), 'Canny',0.2,1);
+    edges = or(edge_r,edge_g);
+    edges = or(edges,edge_b);
 %     edge_pixels = edges(edges==1);
 %     figure;
 %     imshow(edges);
