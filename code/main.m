@@ -50,15 +50,15 @@ numCols = size(img1,2);
 pixel_mst0 = gen_pixel_mst(img0);
 pixel_mst1 = gen_pixel_mst(img1);
 
-aggr_pixel_cost0 = graph_traversal_latest(pixel_mst0, reshape(pixel_disp0,numRows*numCols,[]), sigma); 
-aggr_pixel_cost1 = graph_traversal_latest(pixel_mst1, reshape(pixel_disp1,numRows*numCols,[]), sigma); 
+aggr_pixel_cost0 = graph_traversal(pixel_mst0, reshape(pixel_disp0,numRows*numCols,[]), sigma); 
+aggr_pixel_cost1 = graph_traversal(pixel_mst1, reshape(pixel_disp1,numRows*numCols,[]), sigma); 
 
 %% Region Level MST
 [region_mst1,region_disp1,L1,N1] = gen_region_mst(img1, pixel_disp1, slic_seed);
-aggr_region_cost1 = graph_traversal_latest(region_mst1, region_disp1, sigma);
+aggr_region_cost1 = graph_traversal(region_mst1, region_disp1, sigma);
 
 [region_mst0,region_disp0,L0,N0] = gen_region_mst(img0, pixel_disp0, slic_seed);
-aggr_region_cost0 = graph_traversal_latest(region_mst0, region_disp0, sigma);
+aggr_region_cost0 = graph_traversal(region_mst0, region_disp0, sigma);
 
 %% Combined Pixel Costs
 
@@ -85,7 +85,7 @@ for x=1:numRows
         end
     end
 end
-aggr_pixel_cost = graph_traversal_latest(pixel_mst0, reshape(cost_new,numRows*numCols,[]), sigma); 
+aggr_pixel_cost = graph_traversal(pixel_mst0, reshape(cost_new,numRows*numCols,[]), sigma); 
 [~,disparity] = min(aggr_pixel_cost,[],2);
 disparity = reshape(disparity, numRows,numCols,[]);
 
