@@ -1,5 +1,5 @@
 # Depth Map Estimation and Post Capture Image Refocusing
-This repository is contains the code for our course project for Digital Image Procesing (CS663) at IIT Bombay. The project aims to extimate depth maps from stereo images. We further used the depth estimates to interactively refocus and generate depth blurring. We have implemented the paper "Efﬁcient Hybrid Tree-Based Stereo Matching With Applications to Postcapture Image Refocusing" [[1]](https://ieeexplore.ieee.org/document/6826503/)
+This repository is contains the code for our course project for Digital Image Procesing (CS663) at IIT Bombay. The project aims to extimate depth maps from stereo images. We further used the depth estimates to interactively refocus and generate depth blurring. We have implemented the paper "[Efﬁcient Hybrid Tree-Based Stereo Matching With Applications to Postcapture Image Refocusing](https://ieeexplore.ieee.org/document/6826503/)"
 
 
 ## Team Members
