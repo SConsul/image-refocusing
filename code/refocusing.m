@@ -1,6 +1,8 @@
 tic();
-disp0_1 = parsePfm('../data/disp0.pfm');
-picture_left = im2double(imread('../data/im0.png'));
+% disp0_1 = parsePfm('../data/disp0.pfm');
+disp0_1 = load('../data/cable_disp.mat');
+disp0_1 = disp0_1.disparity;
+picture_left = im2double(imread('../data/im0_cable.png'));
 disp0_1(disp0_1 == Inf) = 0;
 
 %%Parameters using camera calib
@@ -9,7 +11,7 @@ doffs = 107.911;
 baseline = 237.604;
 mmperpixel = 0.005196629; %Pixel size in mm
 f_mm = f*mmperpixel;%Focal length in mm
-K = 0.3;
+K = 1;
 
 depth_map = zeros(size(disp0_1));
 depth_map = (baseline*f)./(disp0_1 + doffs); %Converting disparities to depth in mm
@@ -17,8 +19,7 @@ depth_map = (baseline*f)./(disp0_1 + doffs); %Converting disparities to depth in
 % imshow(mat2gray(depth_map));
 % figure();
 % imshow(mat2gray(disp0_1));
-picture_left = imresize(picture_left,1/3);
-depth_map = imresize(depth_map,1/3);
+picture_left = imresize(picture_left,1/5);
 [height,width,c] = size(picture_left);
 
 imshow(picture_left);
@@ -64,8 +65,4 @@ end
 figure();
 % refocussed_image(I) = picture_left_copy(I);
 imshow(refocussed_image);
-figure;
-imshow(mat2gray(abs(C_p)));
-figure;
-imshow(picture_left);
 toc();
